@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TimeRephrase — Time Summarization & Human-Like Rephrasing</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <!-- Background Noise Texture -->
+  <div class="bg-noise"></div>
+  <div class="bg-grid"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⧖</span>
+        <span class="logo-text">TimeRephrase</span>
+      </div>
+      <nav class="nav">
+        <a href="#summarize" class="nav-link active" onclick="switchTab('summarize', this)">Summarize</a>
+        <a href="#rephrase" class="nav-link" onclick="switchTab('rephrase', this)">Rephrase</a>
+        <a href="#history" class="nav-link" onclick="switchTab('history', this)">History</a>
+      </nav>
+      <div class="header-badge">AI Powered</div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-eyebrow">Natural Language Intelligence</div>
+    <h1 class="hero-title">
+      Turn <em>time data</em> into<br/>
+      <span class="hero-highlight">human stories</span>
+    </h1>
+    <p class="hero-sub">Paste durations, timestamps, or time-heavy text. Get concise summaries and naturally phrased, human-readable output — instantly.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num" id="totalProcessed">0</span><span class="stat-label">Processed</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span class="stat-num" id="totalChars">0</span><span class="stat-label">Characters</span></div>
+      <div class="stat-divider"></div>
+      <div class="stat"><span class="stat-num" id="totalSaved">0</span><span class="stat-label">Saved</span></div>
+    </div>
+  </section>
+
+  <!-- Main App -->
+  <main class="main">
+
+    <!-- TAB: Summarize -->
+    <div id="tab-summarize" class="tab-panel active">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <h2 class="panel-title">Time Summarization</h2>
+          <p class="panel-desc">Input text containing time expressions, durations, or timestamps and get an intelligent summary.</p>
+        </div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" onclick="setMode('summarize','quick',this)">Quick</button>
+          <button class="mode-btn" onclick="setMode('summarize','detailed',this)">Detailed</button>
+          <button class="mode-btn" onclick="setMode('summarize','narrative',this)">Narrative</button>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+        <div class="editor-box">
+          <div class="editor-label">
+            <span>Input Text</span>
+            <span class="char-count" id="summarize-char-count">0 chars</span>
+          </div>
+          <textarea 
+            id="summarize-input" 
+            class="editor-textarea"
+            placeholder="Paste your time-heavy text here...
+
+Examples:
+• The meeting lasted 2 hours and 45 minutes, followed by a 30-minute break. The project has been ongoing for 3 months and 12 days...
+• Task A: 1h 20m | Task B: 45min | Task C: 2h 5m | Task D: 30m...
+• Started at 09:15 AM, ended at 5:30 PM with 1 hour for lunch..."
+            oninput="updateCharCount('summarize')"
+          ></textarea>
+          <div class="editor-actions">
+            <button class="btn-ghost" onclick="loadExample('summarize')">Load Example</button>
+            <button class="btn-ghost" onclick="clearField('summarize-input')">Clear</button>
+          </div>
+        </div>
+
+        <div class="editor-box output-box">
+          <div class="editor-label">
+            <span>Summary Output</span>
+            <div class="output-actions">
+              <button class="icon-btn" onclick="copyOutput('summarize-output')" title="Copy">⊕</button>
+              <button class="icon-btn" onclick="saveToHistory('summarize')" title="Save">★</button>
+            </div>
+          </div>
+          <div id="summarize-output" class="editor-output">
+            <div class="output-placeholder">
+              <div class="placeholder-icon">⧗</div>
+              <p>Your summarized output will appear here</p>
+            </div>
+          </div>
+          <div class="output-meta" id="summarize-meta" style="display:none">
+            <span class="meta-tag" id="summarize-time-range"></span>
+            <span class="meta-tag" id="summarize-total"></span>
+            <span class="meta-tag" id="summarize-reduction"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="options-row">
+          <label class="option-check">
+            <input type="checkbox" id="sum-include-breakdown" checked/> Include breakdown
+          </label>
+          <label class="option-check">
+            <input type="checkbox" id="sum-show-totals" checked/> Show totals
+          </label>
+          <label class="option-check">
+            <input type="checkbox" id="sum-human-tone"/> Conversational tone
+          </label>
+        </div>
+        <button class="btn-primary" onclick="runSummarize()">
+          <span class="btn-icon">⧖</span> Summarize Time
+        </button>
+      </div>
+
+      <!-- Time Calculator Strip -->
+      <div class="calculator-strip">
+        <div class="calc-title">Quick Time Calculator</div>
+        <div class="calc-row">
+          <input type="text" id="calc-input" class="calc-input" placeholder="e.g. 1h 30m + 45m + 2h 15m" oninput="liveCalc()"/>
+          <div class="calc-result" id="calc-result">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Rephrase -->
+    <div id="tab-rephrase" class="tab-panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <h2 class="panel-title">Human-Like Rephrasing</h2>
+          <p class="panel-desc">Transform robotic, technical time expressions into natural, flowing human language.</p>
+        </div>
+        <div class="mode-toggle">
+          <button class="mode-btn active" onclick="setMode('rephrase','casual',this)">Casual</button>
+          <button class="mode-btn" onclick="setMode('rephrase','formal',this)">Formal</button>
+          <button class="mode-btn" onclick="setMode('rephrase','storytelling',this)">Story</button>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+        <div class="editor-box">
+          <div class="editor-label">
+            <span>Technical / Robotic Text</span>
+            <span class="char-count" id="rephrase-char-count">0 chars</span>
+          </div>
+          <textarea 
+            id="rephrase-input" 
+            class="editor-textarea"
+            placeholder="Enter time expressions or robotic phrasing...
+
+Examples:
+• Duration: 02:45:30 | Start: 1970-01-01T09:00:00Z
+• User session lasted 3600 seconds. Idle timeout: 1800s.
+• ETA: T+72h. Deployment window: 15:00-17:00 UTC+5..."
+            oninput="updateCharCount('rephrase')"
+          ></textarea>
+          <div class="editor-actions">
+            <button class="btn-ghost" onclick="loadExample('rephrase')">Load Example</button>
+            <button class="btn-ghost" onclick="clearField('rephrase-input')">Clear</button>
+          </div>
+        </div>
+
+        <div class="editor-box output-box">
+          <div class="editor-label">
+            <span>Rephrased Output</span>
+            <div class="output-actions">
+              <button class="icon-btn" onclick="copyOutput('rephrase-output')" title="Copy">⊕</button>
+              <button class="icon-btn" onclick="saveToHistory('rephrase')" title="Save">★</button>
+            </div>
+          </div>
+          <div id="rephrase-output" class="editor-output">
+            <div class="output-placeholder">
+              <div class="placeholder-icon">✦</div>
+              <p>Rephrased human-like text will appear here</p>
+            </div>
+          </div>
+          <div class="variants-row" id="rephrase-variants" style="display:none">
+            <div class="variants-label">Alternate phrasings:</div>
+            <div class="variants-list" id="variants-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <div class="options-row">
+          <label class="option-check">
+            <input type="checkbox" id="reph-show-variants" checked/> Show variants
+          </label>
+          <label class="option-check">
+            <input type="checkbox" id="reph-keep-context" checked/> Keep context
+          </label>
+          <label class="option-check">
+            <input type="checkbox" id="reph-add-emotion"/> Add emotion
+          </label>
+        </div>
+        <button class="btn-primary" onclick="runRephrase()">
+          <span class="btn-icon">✦</span> Rephrase Humanly
+        </button>
+      </div>
+
+      <!-- Live Preview Panel -->
+      <div class="preview-panel">
+        <div class="preview-title">Live Conversion Reference</div>
+        <div class="conversions-grid" id="conversions-grid">
+          <div class="conv-item"><span class="conv-raw">02:30:00</span><span class="conv-arrow">→</span><span class="conv-human">about two and a half hours</span></div>
+          <div class="conv-item"><span class="conv-raw">86400s</span><span class="conv-arrow">→</span><span class="conv-human">a full day</span></div>
+          <div class="conv-item"><span class="conv-raw">T+72h</span><span class="conv-arrow">→</span><span class="conv-human">three days from now</span></div>
+          <div class="conv-item"><span class="conv-raw">1970-01-01T00:00:00Z</span><span class="conv-arrow">→</span><span class="conv-human">the Unix epoch (Jan 1, 1970)</span></div>
+          <div class="conv-item"><span class="conv-raw">15:00-17:00 UTC</span><span class="conv-arrow">→</span><span class="conv-human">from 3 to 5 in the afternoon (UTC)</span></div>
+          <div class="conv-item"><span class="conv-raw">P3Y6M4DT12H</span><span class="conv-arrow">→</span><span class="conv-human">3 years, 6 months, 4 days and 12 hours</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: History -->
+    <div id="tab-history" class="tab-panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <h2 class="panel-title">Session History</h2>
+          <p class="panel-desc">Your saved summaries and rephrasings from this session.</p>
+        </div>
+        <button class="btn-ghost" onclick="clearHistory()">Clear All</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <div class="empty-history">
+          <div class="empty-icon">◌</div>
+          <p>No history yet. Summarize or rephrase something and save it with ★</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-logo">⧖ TimeRephrase</span>
+      <span class="footer-copy">Time Summarization & Human-Like Rephrasing — Powered by Claude AI</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
